@@ -3,7 +3,7 @@ import {
   courseValidator,
   courseQueryValidator,
 } from "../validators/courseValidator.js";
-import * as db from "../database/course.js"
+import * as db from "../database/course.js";
 
 const courseApp = new Hono();
 
@@ -18,7 +18,7 @@ courseApp.get("/", courseQueryValidator, async (c) => {
   };
 
   try {
-    const response = await db.getCourses(query)
+    const response = await db.getCourses(query);
     return c.json({
       ...defaultResponse,
       ...response,
@@ -35,7 +35,7 @@ courseApp.get("/:id", async (c) => {
     if (!course) {
       throw new Error("Course not found");
     }
-    return c.json(course, 200 );
+    return c.json(course, 200);
   } catch (error) {
     console.error(error);
     return c.json({ error: "Course not found" }, 404);
@@ -45,8 +45,8 @@ courseApp.get("/:id", async (c) => {
 courseApp.post("/", courseValidator, async (c) => {
   try {
     const newCourse: NewCourse = c.req.valid("json");
-    const course: Course = await db.createCourse(newCourse)
-    return c.json(course,201)
+    const course: Course = await db.createCourse(newCourse);
+    return c.json(course, 201);
   } catch (error) {
     console.error(error);
     return c.json({ error: "Failed to create course" }, 400);
@@ -59,12 +59,12 @@ courseApp.put("/:id", courseValidator, async (c) => {
     const newCourse: NewCourse = c.req.valid("json");
     const course = await db.updateCourse(id, newCourse);
     if (!course) {
-      return c.json({ error: "Course not found" }, 404);
+      throw new Error("Failed to update course");
     }
     return c.json(course, 200);
   } catch (error) {
     console.error(error);
-    return c.json({ error: "Failed to update course" }, 400);
+    return c.json({ error: "Failed to update course" }, 404);
   }
 });
 
@@ -73,7 +73,7 @@ courseApp.delete("/:id", async (c) => {
   try {
     const course = await db.deleteCourse(id);
     if (!course) {
-      return c.json({ error: "Course not found" }, 404);
+      throw new Error("Failed to delete course");
     }
     return c.json({ message: "Course deleted successfully" }, 200);
   } catch (error) {

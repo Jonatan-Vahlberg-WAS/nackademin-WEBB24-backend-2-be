@@ -22,7 +22,7 @@ export async function getCourses(query: CourseListQuery): Promise<PaginatedListR
 
   if (query.q) {
     // _query.ilike("title", `%${query.q}%`); // Simple full text search
-    _query.or(`title.ilike.%${query.q}%,description.ilike.%${query.q}%`); // Complex time consuming Full text search
+    _query.or(`title.ilike.%${query.q}%,description.ilike.%${query.q}%,instructor.ilike.%${query.q}%`); // Complex time consuming Full text search
   }
 
   const courses: PostgrestSingleResponse<Course[]> = await _query;
@@ -47,14 +47,18 @@ export async function createCourse(course: NewCourse): Promise<Course> {
   return response.data!;
 }
 
-export async function updateCourse(id: string, course: NewCourse): Promise<Course> {
-  const query = supabase.from("courses").update(course).eq("course_id", id).select().single();
+export async function updateCourse(id: string, course: NewCourse): Promise<Course | null> {
+  const courseWithoutId: NewCourse = {
+    ...course,
+    course_id: undefined
+  }  
+  const query = supabase.from("courses").update(courseWithoutId).eq("course_id", id).select().single();
   const response: PostgrestSingleResponse<Course> = await query;
-  return response.data!;
+  return response.data;
 }
 
 export async function deleteCourse(id: string): Promise<Course | null> {
   const query = supabase.from("courses").delete().eq("course_id", id).select().single();
   const response: PostgrestSingleResponse<Course> = await query;
-  return response.data || null;
+  return response.data;
 }
