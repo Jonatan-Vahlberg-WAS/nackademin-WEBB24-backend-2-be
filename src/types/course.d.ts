@@ -12,3 +12,11 @@ interface NewCourse {
 interface Course extends NewCourse {
   course_id: string;
 }
+
+type CourseListQuery = {
+  limit?: number;
+  offset?: number;
+  department?: string;
+  q?: string;
+  sort_by?: "title" | "start_date" | string;
+};

@@ -6,26 +6,27 @@ import {
   courseQueryValidator,
 } from "../validators/courseValidator.js";
 import * as db from "../database/course.js"
-import type { PostgrestSingleResponse } from "@supabase/supabase-js";
 
 const courseApp = new Hono();
 
 courseApp.get("/", courseQueryValidator, async (c) => {
-  const { limit, offset, department, q, sortby } = c.req.valid("query");
+  const query = c.req.valid("query");
+
+  let defaultResponse: PaginatedListResponse<Course> = {
+    data: [],
+    count: 0,
+    offset: query.offset || 0,
+    limit: query.limit || 10,
+  };
 
   try {
-    //? Database query simulation /data/courses.json
-    // const startIndex = offset-1 > 0 ? offset-1 : 0
-    // const endIndex = startIndex + limit -1
-    const courses: Course[]= await db.getCourses()
-    const response = {
-      data: courses,
-      offset,
-      limit,
-    };
-    return c.json(response);
+    const response = await db.getCourses(query)
+    return c.json({
+      ...defaultResponse,
+      ...response,
+    });
   } catch (error) {
-    return c.json([]);
+    return c.json(defaultResponse);
   }
 });
 
