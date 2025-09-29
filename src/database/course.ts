@@ -35,16 +35,18 @@ export async function getCourses(query: CourseListQuery): Promise<PaginatedListR
   };
 }
 
-export async function getCourse(id: string): Promise<Course | null> {
+export async function getCourse(id: string): Promise<Course> {
   const query = supabase.from("courses").select("*").eq("course_id", id).single();
   const response: PostgrestSingleResponse<Course> = await query;
-  return response.data || null;
+  if(response.error) throw response.error
+  return response.data;
 }
 
 export async function createCourse(course: NewCourse): Promise<Course> {
   const query = supabase.from("courses").insert(course).select().single();
   const response: PostgrestSingleResponse<Course> = await query;
-  return response.data!;
+  if(response.error) throw response.error
+  return response.data;
 }
 
 export async function updateCourse(id: string, course: NewCourse): Promise<Course | null> {

@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import dotenv from "dotenv";
 import courseApp from "./routes/course.js";
 import studentApp from "./routes/student.js";
+import { HTTPException } from "hono/http-exception";
 dotenv.config();
 
 const app = new Hono( {
@@ -29,6 +30,15 @@ app.get("/health/", (c) => {
     timestamp: new Date().toISOString(),
     version: "1.0.0",
   })
+})
+
+app.onError((err, c) => {
+  if(err instanceof HTTPException){
+    console.log("managed risk error")
+    return err.getResponse()
+  }
+  console.log("unexpected error", err)
+  return c.json({ error: "Internal server error" }, 500);
 })
 
 serve(

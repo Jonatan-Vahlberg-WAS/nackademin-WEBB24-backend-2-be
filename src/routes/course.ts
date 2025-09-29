@@ -4,6 +4,8 @@ import {
   courseQueryValidator,
 } from "../validators/courseValidator.js";
 import * as db from "../database/course.js";
+import { HTTPException } from "hono/http-exception";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 const courseApp = new Hono();
 
@@ -24,6 +26,7 @@ courseApp.get("/", courseQueryValidator, async (c) => {
       ...response,
     });
   } catch (error) {
+    console.error("Error in fetching courses", error);
     return c.json(defaultResponse);
   }
 });
@@ -32,13 +35,12 @@ courseApp.get("/:id", async (c) => {
   const { id } = c.req.param();
   try {
     const course = await db.getCourse(id);
-    if (!course) {
-      throw new Error("Course not found");
-    }
     return c.json(course, 200);
   } catch (error) {
-    console.error(error);
-    return c.json({ error: "Course not found" }, 404);
+    console.error("Error in getting course", error);
+    throw new HTTPException(404, {
+      res: c.json({ error: "Course not found" }, 404),
+    });
   }
 });
 
@@ -47,9 +49,26 @@ courseApp.post("/", courseValidator, async (c) => {
     const newCourse: NewCourse = c.req.valid("json");
     const course: Course = await db.createCourse(newCourse);
     return c.json(course, 201);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    return c.json({ error: "Failed to create course" }, 400);
+    if ((error as PostgrestError).code === "23505") {
+      throw new HTTPException(409, {
+        res: c.json(
+          {
+            error: "There is a course with this 'id' allready",
+          },
+          409
+        ),
+      });
+    }
+    throw new HTTPException(400, {
+      res: c.json(
+        {
+          error: "Course could not be created",
+        },
+        400
+      ),
+    });
   }
 });
 
@@ -64,7 +83,10 @@ courseApp.put("/:id", courseValidator, async (c) => {
     return c.json(course, 200);
   } catch (error) {
     console.error(error);
-    return c.json({ error: "Failed to update course" }, 404);
+    throw new HTTPException(404,
+    {
+      res: c.json({ error: "Failed to update course" }, 404),
+    });
   }
 });
 
