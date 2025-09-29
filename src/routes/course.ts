@@ -1,6 +1,4 @@
 import { Hono } from "hono";
-import { supabase } from "../lib/supabase.js";
-import fs from "fs/promises";
 import {
   courseValidator,
   courseQueryValidator,
@@ -33,16 +31,14 @@ courseApp.get("/", courseQueryValidator, async (c) => {
 courseApp.get("/:id", async (c) => {
   const { id } = c.req.param();
   try {
-    const data: string = await fs.readFile("src/data/courses.json", "utf8");
-    const courses: Course[] = JSON.parse(data);
-    const course = courses.find((course) => course.course_id === id);
+    const course = await db.getCourse(id);
     if (!course) {
       throw new Error("Course not found");
     }
-    return c.json(course);
+    return c.json(course, 200 );
   } catch (error) {
     console.error(error);
-    return c.json(null, 404);
+    return c.json({ error: "Course not found" }, 404);
   }
 });
 
@@ -60,19 +56,12 @@ courseApp.post("/", courseValidator, async (c) => {
 courseApp.put("/:id", courseValidator, async (c) => {
   const { id } = c.req.param();
   try {
-    const body: NewCourse = c.req.valid("json");
-    const data: string = await fs.readFile("src/data/courses.json", "utf8");
-    const courses: Course[] = JSON.parse(data);
-    const course = courses.find((course) => course.course_id === id);
+    const newCourse: NewCourse = c.req.valid("json");
+    const course = await db.updateCourse(id, newCourse);
     if (!course) {
       return c.json({ error: "Course not found" }, 404);
     }
-    const updatedCourse: Course = {
-      ...course,
-      ...body,
-      course_id: id,
-    };
-    return c.json(updatedCourse, 200);
+    return c.json(course, 200);
   } catch (error) {
     console.error(error);
     return c.json({ error: "Failed to update course" }, 400);
@@ -82,16 +71,14 @@ courseApp.put("/:id", courseValidator, async (c) => {
 courseApp.delete("/:id", async (c) => {
   const { id } = c.req.param();
   try {
-    const data: string = await fs.readFile("src/data/courses.json", "utf8");
-    const courses: Course[] = JSON.parse(data);
-    const course = courses.find((course) => course.course_id === id);
+    const course = await db.deleteCourse(id);
     if (!course) {
       return c.json({ error: "Course not found" }, 404);
     }
-    return c.json(course, 200);
+    return c.json({ message: "Course deleted successfully" }, 200);
   } catch (error) {
     console.error(error);
-    return c.json({ error: "Failed to delete course" }, 400);
+    return c.json({ error: "Failed to delete course" }, 404);
   }
 });
 
