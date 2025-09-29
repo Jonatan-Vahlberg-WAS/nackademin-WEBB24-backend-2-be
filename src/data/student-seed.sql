@@ -1,4 +1,9 @@
-[
+INSERT INTO students (
+  student_id, first_name, last_name, email, date_of_birth, major, phone_number, course_id
+)
+SELECT
+  x.student_id, x.first_name, x.last_name, x.email, x.date_of_birth, x.major, x.phone_number, x.course_id
+FROM jsonb_to_recordset($$[
   {
     "student_id": "std_001",
     "first_name": "Anna",
@@ -6,7 +11,7 @@
     "email": "anna.k@example.com",
     "date_of_birth": "2003-05-15",
     "major": "Software Engineering",
-    "course_id": "PGSQL-101"
+    "course_id": "pgsql-101"
   },
   {
     "student_id": "std_003",
@@ -16,7 +21,7 @@
     "date_of_birth": "2002-01-20",
     "major": "Data Science",
     "phone_number": "070-1112233",
-    "course_id": "PGSQL-101"
+    "course_id": "pgsql-101"
   },
   {
     "student_id": "std_007",
@@ -24,7 +29,7 @@
     "last_name": "Lindgren",
     "email": "sofia.lindgren@example.com",
     "date_of_birth": "2004-03-12",
-    "course_id": "PGSQL-101"
+    "course_id": "pgsql-101"
   },
   {
     "student_id": "std_002",
@@ -34,7 +39,7 @@
     "date_of_birth": "2001-11-30",
     "major": "Software Engineering",
     "phone_number": "073-9876543",
-    "course_id": "WEBDEV-205"
+    "course_id": "webdev-205"
   },
   {
     "student_id": "std_004",
@@ -42,7 +47,7 @@
     "last_name": "Nilsson",
     "email": "emma.nilsson@example.com",
     "date_of_birth": "2003-08-22",
-    "course_id": "WEBDEV-205"
+    "course_id": "webdev-205"
   },
   {
     "student_id": "std_009",
@@ -51,7 +56,7 @@
     "email": "william.b@example.com",
     "date_of_birth": "2002-12-01",
     "major": "Interaction Design",
-    "course_id": "WEBDEV-205"
+    "course_id": "webdev-205"
   },
   {
     "student_id": "std_005",
@@ -61,7 +66,7 @@
     "date_of_birth": "2000-06-10",
     "major": "History",
     "phone_number": "076-5554433",
-    "course_id": "HIST-101"
+    "course_id": "hist-101"
   },
   {
     "student_id": "std_006",
@@ -69,7 +74,7 @@
     "last_name": "Johansson",
     "email": "p.johansson@example.com",
     "date_of_birth": "2001-02-05",
-    "course_id": "HIST-101"
+    "course_id": "hist-101"
   },
   {
     "student_id": "std_010",
@@ -78,7 +83,7 @@
     "email": "olivia.h@example.com",
     "date_of_birth": "2004-07-19",
     "major": "Political Science",
-    "course_id": "HIST-101"
+    "course_id": "hist-101"
   },
   {
     "student_id": "std_008",
@@ -87,6 +92,24 @@
     "email": "erik.g@example.com",
     "date_of_birth": "2002-09-03",
     "major": "Computer Science",
-    "course_id": "ALGO-301"
+    "course_id": "algo-301"
   }
 ]
+$$::jsonb) AS x(
+  student_id   text,
+  first_name   text,
+  last_name    text,
+  email        text,
+  date_of_birth date,
+  major        text,
+  phone_number text,
+  course_id    text
+)
+ON CONFLICT (student_id) DO UPDATE SET
+  first_name   = EXCLUDED.first_name,
+  last_name    = EXCLUDED.last_name,
+  email        = EXCLUDED.email,
+  date_of_birth= EXCLUDED.date_of_birth,
+  major        = EXCLUDED.major,
+  phone_number = EXCLUDED.phone_number,
+  course_id    = EXCLUDED.course_id;
