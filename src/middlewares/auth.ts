@@ -48,6 +48,7 @@ async function withSupabase(c: Context, next: Next) {
 
     // If Error is JWT expired, attempt to refresh the session
     if (error && error.code === "session_expired") {
+        console.log("session has expired attempting refreshing the session")
       const { data: refreshData, error: refreshError } =
         await sb.auth.refreshSession();
 

@@ -1,7 +1,6 @@
-import type { PostgrestSingleResponse } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase.js";
+import type { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase-js";
 
-export async function getStudents(query: StudentListQuery): Promise<PaginatedListResponse<Student>> {
+export async function getStudents(sb: SupabaseClient, query: StudentListQuery): Promise<PaginatedListResponse<Student>> {
   const sortable = new Set(["first_name", "last_name"]);
   const order = query.sort_by
     ? sortable.has(query.sort_by)
@@ -10,7 +9,7 @@ export async function getStudents(query: StudentListQuery): Promise<PaginatedLis
     : "first_name";
   const startIndex = query.offset || 0;
   const endIndex = startIndex + (query.limit || 10) - 1;
-  const _query = supabase
+  const _query = sb
     .from("students")
     .select("*", { count: "exact" })
     .order(order, { ascending: true })
@@ -29,8 +28,8 @@ export async function getStudents(query: StudentListQuery): Promise<PaginatedLis
   };
 }
 
-export async function getStudent(id: string): Promise<Student> {
-  const { data, error } = await supabase
+export async function getStudent(sb: SupabaseClient, id: string): Promise<Student> {
+  const { data, error } = await sb
     .from("students")
     .select("*")
     .eq("student_id", id)
@@ -41,8 +40,8 @@ export async function getStudent(id: string): Promise<Student> {
   return data;
 }
 
-export async function createStudent(student: NewStudent): Promise<Student> {
-  const { data, error } = await supabase
+export async function createStudent(sb: SupabaseClient, student: NewStudent): Promise<Student> {
+  const { data, error } = await sb
     .from("students")
     .insert(student)
     .select()
@@ -53,8 +52,8 @@ export async function createStudent(student: NewStudent): Promise<Student> {
   return data;
 }
 
-export async function updateStudent(id: string, student: NewStudent): Promise<Student> {
-  const { data, error } = await supabase
+export async function updateStudent(sb: SupabaseClient, id: string, student: NewStudent): Promise<Student> {
+  const { data, error } = await sb
     .from("students")
     .update(student)
     .eq("student_id", id)
@@ -66,8 +65,8 @@ export async function updateStudent(id: string, student: NewStudent): Promise<St
   return data;
 }
 
-export async function deleteStudent(id: string): Promise<Student> {
-  const { data, error } = await supabase
+export async function deleteStudent(sb: SupabaseClient, id: string): Promise<Student> {
+  const { data, error } = await sb
     .from("students")
     .delete()
     .eq("student_id", id)

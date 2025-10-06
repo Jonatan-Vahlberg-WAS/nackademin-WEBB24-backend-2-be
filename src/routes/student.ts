@@ -1,17 +1,18 @@
-import { Hono } from "hono";
-import fs from "fs/promises";
-import studentValidator, { studentQueryValidator } from "../validators/studentValidator.js";
-import * as db from "../database/student.js";
-import { HTTPException } from "hono/http-exception";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+
+import * as db from "../database/student.js";
+import { requireAuth } from "../middlewares/auth.js";
+import studentValidator, { studentQueryValidator } from "../validators/studentValidator.js";
 
 const studentApp = new Hono();
 
 studentApp.get("/", studentQueryValidator, async (c) => {
-
+    const sb = c.get("supabase");
     try {
         const query = c.req.valid("query") as StudentListQuery;
-        const response = await db.getStudents(query);
+        const response = await db.getStudents(sb, query);
         return c.json(response);
     } catch (error) {
         return c.json([]);
@@ -20,8 +21,9 @@ studentApp.get("/", studentQueryValidator, async (c) => {
 
 studentApp.get("/:id",async (c) => {
     const { id } = c.req.param();
+    const sb = c.get("supabase");
     try {
-        const student = await db.getStudent(id);
+        const student = await db.getStudent(sb, id);
         if (!student) {
             throw new Error("Student not found");
         }
@@ -32,10 +34,11 @@ studentApp.get("/:id",async (c) => {
     }
 });
 
-studentApp.post("/", studentValidator, async (c) => {
+studentApp.post("/", requireAuth, studentValidator, async (c) => {
+    const sb = c.get("supabase");
     try {
         const student: NewStudent = c.req.valid("json");
-        const createdStudent = await db.createStudent(student);
+        const createdStudent = await db.createStudent(sb, student);
         return c.json(createdStudent, 201);
     } catch (error) {
         console.error(error);
@@ -48,11 +51,12 @@ studentApp.post("/", studentValidator, async (c) => {
     }
 });
 
-studentApp.put("/:id", studentValidator, async (c) => {
+studentApp.put("/:id", requireAuth, studentValidator, async (c) => {
     const { id } = c.req.param();
+    const sb = c.get("supabase");
     try {
         const body: NewStudent = c.req.valid("json");
-        const student = await db.updateStudent(id, body);
+        const student = await db.updateStudent(sb, id, body);
         if (!student) {
             throw new HTTPException(404, {
                 res: c.json({ error: "Student not found" }, 404),
@@ -71,11 +75,12 @@ studentApp.put("/:id", studentValidator, async (c) => {
     }
 });
 
-studentApp.delete("/:id", async (c) => {
+studentApp.delete("/:id", requireAuth, async (c) => {
 
     const { id } = c.req.param();
+    const sb = c.get("supabase");
     try {
-        const student = await db.deleteStudent(id);
+        const student = await db.deleteStudent(sb, id);
         if (!student) {
             throw new HTTPException(404, {
                 res: c.json({ error: "Student not found" }, 404),

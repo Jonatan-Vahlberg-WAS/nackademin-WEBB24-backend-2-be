@@ -1,7 +1,6 @@
 import type { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabase.js";
 
-export async function getCourses(query: CourseListQuery): Promise<PaginatedListResponse<Course>> {
+export async function getCourses(sb: SupabaseClient, query: CourseListQuery): Promise<PaginatedListResponse<Course>> {
   const sortable = new Set(["title", "start_date"]);
   const order = query.sort_by
     ? sortable.has(query.sort_by)
@@ -10,7 +9,7 @@ export async function getCourses(query: CourseListQuery): Promise<PaginatedListR
     : "title";
   const startIndex = query.offset || 0;
   const endIndex = startIndex + (query.limit || 10) - 1;
-  const _query = supabase
+  const _query = sb
     .from("courses")
     .select("*", { count: "exact" })
     .order(order, { ascending: true })
@@ -35,8 +34,8 @@ export async function getCourses(query: CourseListQuery): Promise<PaginatedListR
   };
 }
 
-export async function getCourse(id: string): Promise<Course> {
-  const query = supabase.from("courses").select("*").eq("course_id", id).single();
+export async function getCourse(sb: SupabaseClient, id: string): Promise<Course> {
+  const query = sb.from("courses").select("*").eq("course_id", id).single();
   const response: PostgrestSingleResponse<Course> = await query;
   if(response.error) throw response.error
   return response.data;
@@ -49,18 +48,18 @@ export async function createCourse(sb: SupabaseClient, course: NewCourse): Promi
   return response.data;
 }
 
-export async function updateCourse(id: string, course: NewCourse): Promise<Course | null> {
+export async function updateCourse(sb: SupabaseClient, id: string, course: NewCourse): Promise<Course | null> {
   const courseWithoutId: NewCourse = {
     ...course,
     course_id: undefined
   }  
-  const query = supabase.from("courses").update(courseWithoutId).eq("course_id", id).select().single();
+  const query = sb.from("courses").update(courseWithoutId).eq("course_id", id).select().single();
   const response: PostgrestSingleResponse<Course> = await query;
   return response.data;
 }
 
-export async function deleteCourse(id: string): Promise<Course | null> {
-  const query = supabase.from("courses").delete().eq("course_id", id).select().single();
+export async function deleteCourse(sb: SupabaseClient, id: string): Promise<Course | null> {
+  const query = sb.from("courses").delete().eq("course_id", id).select().single();
   const response: PostgrestSingleResponse<Course> = await query;
   return response.data;
 }

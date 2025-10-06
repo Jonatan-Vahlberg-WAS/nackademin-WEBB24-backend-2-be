@@ -12,6 +12,7 @@ const courseApp = new Hono();
 
 courseApp.get("/", courseQueryValidator, async (c) => {
   const query = c.req.valid("query");
+  const sb = c.get("supabase");
 
   let defaultResponse: PaginatedListResponse<Course> = {
     data: [],
@@ -21,7 +22,7 @@ courseApp.get("/", courseQueryValidator, async (c) => {
   };
 
   try {
-    const response = await db.getCourses(query);
+    const response = await db.getCourses(sb, query);
     return c.json({
       ...defaultResponse,
       ...response,
@@ -34,8 +35,9 @@ courseApp.get("/", courseQueryValidator, async (c) => {
 
 courseApp.get("/:id", async (c) => {
   const { id } = c.req.param();
+  const sb = c.get("supabase");
   try {
-    const course = await db.getCourse(id);
+    const course = await db.getCourse(sb, id);
     return c.json(course, 200);
   } catch (error) {
     console.error("Error in getting course", error);
@@ -47,7 +49,7 @@ courseApp.get("/:id", async (c) => {
 
 courseApp.post("/", requireAuth, courseValidator, async (c) => {
   try {
-    const sb = c.get("supabase")
+    const sb = c.get("supabase");
     const newCourse: NewCourse = c.req.valid("json");
     const course: Course = await db.createCourse(sb, newCourse);
     return c.json(course, 201);
@@ -74,28 +76,29 @@ courseApp.post("/", requireAuth, courseValidator, async (c) => {
   }
 });
 
-courseApp.put("/:id", courseValidator, async (c) => {
+courseApp.put("/:id", requireAuth, courseValidator, async (c) => {
   const { id } = c.req.param();
+  const sb = c.get("supabase");
   try {
     const newCourse: NewCourse = c.req.valid("json");
-    const course = await db.updateCourse(id, newCourse);
+    const course = await db.updateCourse(sb, id, newCourse);
     if (!course) {
       throw new Error("Failed to update course");
     }
     return c.json(course, 200);
   } catch (error) {
     console.error(error);
-    throw new HTTPException(404,
-    {
+    throw new HTTPException(404, {
       res: c.json({ error: "Failed to update course" }, 404),
     });
   }
 });
 
-courseApp.delete("/:id", async (c) => {
+courseApp.delete("/:id", requireAuth, async (c) => {
   const { id } = c.req.param();
+  const sb = c.get("supabase");
   try {
-    const course = await db.deleteCourse(id);
+    const course = await db.deleteCourse(sb, id);
     if (!course) {
       throw new Error("Failed to delete course");
     }

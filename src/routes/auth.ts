@@ -6,8 +6,8 @@ export const authApp = new Hono();
 
 authApp.post("/login", async (c) => {
   const { email, password } = await c.req.json();
-  const supabase = c.get("supabase");
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const sb = c.get("supabase");
+  const { data, error } = await sb.auth.signInWithPassword({
     email,
     password,
   });
@@ -23,8 +23,8 @@ authApp.post("/login", async (c) => {
 
 authApp.post("/register", registerValidator, async (c) => {
   const { email, password } = await c.req.json();
-  const supabase = c.get("supabase");
-  const response = await supabase.auth.signUp({ email, password });
+  const sb = c.get("supabase");
+  const response = await sb.auth.signUp({ email, password });
   if (response.error) {
     throw new HTTPException(400, {
       res: c.json({ error: response.error.message }, 400),
@@ -35,8 +35,8 @@ authApp.post("/register", registerValidator, async (c) => {
 });
 
 authApp.post("/refresh", async (c) => {
-  const supabase = c.get("supabase");
-  const { data, error } = await supabase.auth.refreshSession();
+  const sb = c.get("supabase");
+  const { data, error } = await sb.auth.refreshSession();
 
   if (error) {
     throw new HTTPException(401, {
@@ -54,8 +54,8 @@ authApp.post("/refresh", async (c) => {
 });
 
 authApp.post("/logout", async (c) => {
-  const supabase = c.get("supabase");
-  const { error } = await supabase.auth.signOut();
+  const sb = c.get("supabase");
+  const { error } = await sb.auth.signOut();
 
   if (error) {
     throw new HTTPException(400, {
