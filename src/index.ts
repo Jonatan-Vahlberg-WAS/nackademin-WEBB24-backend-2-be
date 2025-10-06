@@ -1,10 +1,15 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
+
 import dotenv from "dotenv";
+dotenv.config();
+
+import { optionalAuth } from "./middlewares/auth.js";
+import { authApp } from "./routes/auth.js";
 import courseApp from "./routes/course.js";
 import studentApp from "./routes/student.js";
-import { HTTPException } from "hono/http-exception";
-dotenv.config();
+
 
 const app = new Hono( {
   strict: false
@@ -12,9 +17,12 @@ const app = new Hono( {
 
 const serverStartTime = Date.now()
 
+app.use("*", optionalAuth)
+
 app.get("/", (c) => {
   return c.text("Hello Hono!");
 });
+app.route ("/auth", authApp)
 app.route("/courses", courseApp);
 app.route("/students", studentApp);
 

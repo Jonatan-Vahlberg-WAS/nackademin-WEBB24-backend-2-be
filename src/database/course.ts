@@ -1,4 +1,4 @@
-import type { PostgrestSingleResponse } from "@supabase/supabase-js";
+import type { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase.js";
 
 export async function getCourses(query: CourseListQuery): Promise<PaginatedListResponse<Course>> {
@@ -42,8 +42,8 @@ export async function getCourse(id: string): Promise<Course> {
   return response.data;
 }
 
-export async function createCourse(course: NewCourse): Promise<Course> {
-  const query = supabase.from("courses").insert(course).select().single();
+export async function createCourse(sb: SupabaseClient, course: NewCourse): Promise<Course> {
+  const query = sb.from("courses").insert(course).select().single();
   const response: PostgrestSingleResponse<Course> = await query;
   if(response.error) throw response.error
   return response.data;

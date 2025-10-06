@@ -6,6 +6,7 @@ import {
 import * as db from "../database/course.js";
 import { HTTPException } from "hono/http-exception";
 import type { PostgrestError } from "@supabase/supabase-js";
+import { requireAuth } from "../middlewares/auth.js";
 
 const courseApp = new Hono();
 
@@ -44,10 +45,11 @@ courseApp.get("/:id", async (c) => {
   }
 });
 
-courseApp.post("/", courseValidator, async (c) => {
+courseApp.post("/", requireAuth, courseValidator, async (c) => {
   try {
+    const sb = c.get("supabase")
     const newCourse: NewCourse = c.req.valid("json");
-    const course: Course = await db.createCourse(newCourse);
+    const course: Course = await db.createCourse(sb, newCourse);
     return c.json(course, 201);
   } catch (error: any) {
     console.error(error);
