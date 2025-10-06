@@ -12,3 +12,10 @@ interface NewStudent {
 interface Student extends NewStudent {
     student_id: string;
 }
+
+interface StudentListQuery {
+    q?: string;
+    sort_by?: string;
+    offset?: number;
+    limit?: number;
+}

@@ -21,3 +21,12 @@ const studentValidator = zValidator("json", schema, (result, c) => {
     }
 });
 export default studentValidator;
+
+const studentQuerySchema: z.ZodType<StudentListQuery> = z.object({
+    limit: z.coerce.number().optional().default(10),
+    offset: z.coerce.number().optional().default(0),
+    q: z.string().optional(),
+    sort_by: z.string().optional(),
+}); 
+
+export const studentQueryValidator = zValidator("query", studentQuerySchema);
