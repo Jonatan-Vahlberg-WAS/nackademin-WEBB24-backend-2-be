@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { registerValidator } from "../validators/authValidators.js";
+import { requireAuth } from "../middlewares/auth.js";
+import * as userDb from "../database/user.js";
 
 export const authApp = new Hono();
 
@@ -64,4 +66,22 @@ authApp.post("/logout", async (c) => {
   }
 
   return c.json({ message: "Successfully logged out" }, 200);
+});
+
+
+//? Me
+
+authApp.get("/me", requireAuth, async (c) => {
+  const sb = c.get("supabase");
+  const user = c.get("user")!;
+  const profile = await userDb.getProfile(sb, user.id);
+  return c.json(profile, 200);
+});
+
+authApp.patch("/me", requireAuth, async (c) => {
+  const sb = c.get("supabase");
+  const user = c.get("user")!;
+  const body: Partial<any>= await c.req.json();
+  const profile = await userDb.updateProfile(sb, user?.id, body);
+  return c.json(profile, 200);
 });
