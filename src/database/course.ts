@@ -25,7 +25,6 @@ export async function getCourses(sb: SupabaseClient, query: CourseListQuery): Pr
   }
 
   const courses: PostgrestSingleResponse<Course[]> = await _query;
-  console.log(courses);
   return {
     data: courses.data || [],
     count: courses.count || 0,
