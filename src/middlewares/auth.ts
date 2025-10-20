@@ -69,7 +69,6 @@ export async function optionalAuth(c: Context, next: Next) {
 }
 
 export async function requireAuth(c: Context, next: Next) {
-  return next() //TODO: Fix when frontend auth is established
   await withSupabase(c, async () => {});
   const user = c.get("user");
   if (!user) {
